@@ -200,19 +200,19 @@ cd frontend && npm test
 ### Screenshots
 
 #### Dashboard
-![Dashboard](docs/dashboard.png)
+![Dashboard](docs/screenshots/dashboard.png)
 
 #### Patient Management
-![Patients](docs/patients.png)
+![Patients](docs/screenshots/patients.png)
 
 #### Appointment Scheduling
-![Appointments](docs/appointments.png)
+![Appointments](docs/screenshots/appointments.png)
 
 #### Queue Management
-![Queue](docs/queue.png)
+![Queue](docs/screenshots/queue.png)
 
 #### Public Queue Display
-![Queue Display](docs/queue-display.png)
+![Queue Display](docs/screenshots/queue-display.png)
 
 ### Key Implementation Highlights
 
