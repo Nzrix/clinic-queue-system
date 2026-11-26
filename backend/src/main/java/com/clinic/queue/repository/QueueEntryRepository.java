@@ -41,12 +41,9 @@ public interface QueueEntryRepository extends JpaRepository<QueueEntry, Long> {
         @Param("end") LocalDateTime end
     );
     
-    @Query("SELECT q FROM QueueEntry q " +
-           "WHERE q.queueDate >= :start AND q.queueDate < :end " +
-           "AND q.status = 'WAITING' " +
-           "ORDER BY q.createdAt")
-    Optional<QueueEntry> findNextWaitingQueue(
-        @Param("start") LocalDateTime start,
-        @Param("end") LocalDateTime end
-    );
+    default Optional<QueueEntry> findNextWaitingQueue(LocalDateTime start, LocalDateTime end) {
+        List<QueueEntry> waiting = findQueueEntriesByDateAndStatus(
+            start, end, QueueEntry.QueueStatus.WAITING);
+        return waiting.isEmpty() ? Optional.empty() : Optional.of(waiting.get(0));
+    }
 }

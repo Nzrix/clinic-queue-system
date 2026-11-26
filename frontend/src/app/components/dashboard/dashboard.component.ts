@@ -69,27 +69,33 @@ import { DashboardResponse } from '../../models/dashboard.model';
         <div class="charts">
           <mat-card class="chart-card">
             <h2>นัดหมาย / คิว 7 วันล่าสุด</h2>
-            <canvas
-              baseChart
-              [data]="appointmentsChartData"
-              [options]="lineOptions"
-              [type]="'line'">
-            </canvas>
+            <div class="chart-box">
+              <canvas
+                *ngIf="appointmentsChartReady"
+                baseChart
+                [data]="appointmentsChartData"
+                [options]="lineOptions"
+                [type]="'line'">
+              </canvas>
+            </div>
           </mat-card>
 
           <mat-card class="chart-card">
             <h2>สถานะคิววันนี้</h2>
-            <div class="empty-state" *ngIf="!hasQueueStatusData; else donut">
+            <div class="empty-state compact" *ngIf="!hasQueueStatusData; else donut">
               <mat-icon>pie_chart</mat-icon>
               <div>ยังไม่มีข้อมูลคิววันนี้</div>
             </div>
             <ng-template #donut>
-              <canvas
-                baseChart
-                [data]="queueStatusChartData"
-                [options]="doughnutOptions"
-                [type]="'doughnut'">
-              </canvas>
+              <div class="chart-box">
+                <canvas
+                  *ngIf="queueChartReady"
+                  baseChart
+                  [data]="queueStatusChartData"
+                  [options]="doughnutOptions"
+                  [type]="'doughnut'">
+                </canvas>
+              </div>
             </ng-template>
           </mat-card>
         </div>
@@ -137,17 +143,33 @@ import { DashboardResponse } from '../../models/dashboard.model';
       display: grid;
       grid-template-columns: 1.4fr 1fr;
       gap: 16px;
+      align-items: start;
     }
 
     .chart-card {
       padding: 20px;
       border-radius: 16px;
-      min-height: 360px;
     }
 
     .chart-card h2 {
-      margin: 0 0 16px;
+      margin: 0 0 12px;
       font-size: 1.1rem;
+    }
+
+    /* Fixed height stops Chart.js responsive resize loops */
+    .chart-box {
+      position: relative;
+      width: 100%;
+      height: 300px;
+    }
+
+    .chart-box canvas {
+      max-height: 100%;
+    }
+
+    .empty-state.compact {
+      height: 300px;
+      padding: 24px;
     }
 
     @media (max-width: 960px) {
@@ -161,6 +183,8 @@ export class DashboardComponent implements OnInit {
   dashboardData: DashboardResponse | null = null;
   loading = true;
   hasQueueStatusData = false;
+  appointmentsChartReady = false;
+  queueChartReady = false;
 
   appointmentsChartData: ChartData<'line'> = { labels: [], datasets: [] };
   queueStatusChartData: ChartData<'doughnut'> = { labels: [], datasets: [] };
@@ -170,7 +194,13 @@ export class DashboardComponent implements OnInit {
     maintainAspectRatio: false,
     plugins: { legend: { position: 'bottom' } },
     scales: {
-      y: { beginAtZero: true, ticks: { precision: 0 } }
+      x: {
+        ticks: { maxRotation: 0, autoSkip: false }
+      },
+      y: {
+        beginAtZero: true,
+        ticks: { precision: 0, stepSize: 1 }
+      }
     }
   };
 
@@ -191,11 +221,16 @@ export class DashboardComponent implements OnInit {
 
   loadDashboard() {
     this.loading = true;
+    this.appointmentsChartReady = false;
+    this.queueChartReady = false;
+
     this.dashboardService.getDashboardData().subscribe({
       next: (data) => {
         this.dashboardData = data;
         this.buildAppointmentsChart(data);
         this.loading = false;
+        // Defer chart mount until the fixed-height box is in the DOM
+        setTimeout(() => { this.appointmentsChartReady = true; });
       },
       error: () => {
         this.loading = false;
@@ -203,35 +238,51 @@ export class DashboardComponent implements OnInit {
     });
 
     this.queueService.getTodayQueue().subscribe({
-      next: (entries) => this.buildQueueStatusChart(entries.map(e => e.status)),
+      next: (entries) => {
+        this.buildQueueStatusChart(entries.map(e => e.status));
+        setTimeout(() => { this.queueChartReady = this.hasQueueStatusData; });
+      },
       error: () => {
         this.hasQueueStatusData = false;
+        this.queueChartReady = false;
       }
     });
   }
 
   private buildAppointmentsChart(data: DashboardResponse) {
+    const days = data.last7Days || [];
     this.appointmentsChartData = {
-      labels: data.last7Days.map(d => d.date),
+      labels: days.map(d => this.formatDayLabel(d.date)),
       datasets: [
         {
-          data: data.last7Days.map(d => d.appointmentCount),
+          data: days.map(d => Number(d.appointmentCount) || 0),
           label: 'นัดหมาย',
           borderColor: '#0f766e',
           backgroundColor: 'rgba(15, 118, 110, 0.15)',
           fill: true,
-          tension: 0.35
+          tension: 0.35,
+          pointRadius: 4,
+          pointHoverRadius: 6
         },
         {
-          data: data.last7Days.map(d => d.queueCount),
+          data: days.map(d => Number(d.queueCount) || 0),
           label: 'คิว',
           borderColor: '#0891b2',
           backgroundColor: 'rgba(8, 145, 178, 0.12)',
           fill: true,
-          tension: 0.35
+          tension: 0.35,
+          pointRadius: 4,
+          pointHoverRadius: 6
         }
       ]
     };
+  }
+
+  private formatDayLabel(dateStr: string): string {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`;
   }
 
   private buildQueueStatusChart(statuses: string[]) {
