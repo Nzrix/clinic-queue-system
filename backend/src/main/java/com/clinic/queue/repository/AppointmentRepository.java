@@ -34,11 +34,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         @Param("status") Appointment.AppointmentStatus status
     );
     
-    @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM Appointment a " +
+    @Query(value = "SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END FROM appointments a " +
            "WHERE a.status = 'SCHEDULED' " +
-           "AND ((a.appointmentTime <= :startTime AND :startTime < (a.appointmentTime + INTERVAL a.durationMinutes MINUTE)) " +
-           "OR (:startTime <= a.appointmentTime AND a.appointmentTime < :endTime)) " +
-           "AND (:excludeId IS NULL OR a.id <> :excludeId)")
+           "AND ((a.appointment_time <= :startTime AND :startTime < DATE_ADD(a.appointment_time, INTERVAL a.duration_minutes MINUTE)) " +
+           "OR (:startTime <= a.appointment_time AND a.appointment_time < :endTime)) " +
+           "AND (:excludeId IS NULL OR a.id <> :excludeId)", nativeQuery = true)
     boolean hasConflictingAppointment(
         @Param("startTime") LocalDateTime startTime,
         @Param("endTime") LocalDateTime endTime,
