@@ -57,10 +57,10 @@ import { DashboardResponse } from '../../models/dashboard.model';
               <div class="label">คิวที่เสร็จสิ้น</div>
             </div>
           </mat-card>
-          <mat-card class="stat" *ngIf="dashboardData.todayStats.averageWaitingTimeMinutes != null">
+          <mat-card class="stat">
             <mat-icon>timer</mat-icon>
             <div>
-              <div class="value">{{ dashboardData.todayStats.averageWaitingTimeMinutes | number:'1.0-0' }}</div>
+              <div class="value">{{ formatAverageWait(dashboardData.todayStats.averageWaitingTimeMinutes) }}</div>
               <div class="label">รอเฉลี่ย (นาที)</div>
             </div>
           </mat-card>
@@ -217,6 +217,14 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.loadDashboard();
+  }
+
+  /** Always show a value aligned with other stat cards (0 / – when empty). */
+  formatAverageWait(minutes: number | null | undefined): string {
+    if (minutes == null || Number.isNaN(Number(minutes))) {
+      return '–';
+    }
+    return String(Math.round(Number(minutes)));
   }
 
   loadDashboard() {

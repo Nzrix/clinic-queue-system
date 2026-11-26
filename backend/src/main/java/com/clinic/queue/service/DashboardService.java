@@ -17,6 +17,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -90,22 +91,35 @@ public class DashboardService {
         return stats;
     }
     
+    /**
+     * Average wait in minutes from joining the queue until being called/served.
+     * Uses queueDate (Bangkok wall-clock, same as calledAt/startedAt) rather than
+     * createdAt, which may be stamped in the JVM default zone via JPA auditing.
+     * Returns 0 when there is no measurable wait data for today.
+     */
     private Double calculateAverageWaitingTime(List<QueueEntry> entries) {
-        List<QueueEntry> completedEntries = entries.stream()
-            .filter(e -> e.getStatus() == QueueEntry.QueueStatus.COMPLETED && 
-                        e.getCreatedAt() != null && 
-                        e.getStartedAt() != null)
+        List<Long> waitMinutes = entries.stream()
+            .map(this::waitingMinutes)
+            .flatMap(Optional::stream)
             .toList();
-        
-        if (completedEntries.isEmpty()) {
-            return null;
+
+        if (waitMinutes.isEmpty()) {
+            return 0.0;
         }
-        
-        double totalMinutes = completedEntries.stream()
-            .mapToLong(e -> Duration.between(e.getCreatedAt(), e.getStartedAt()).toMinutes())
-            .average()
-            .orElse(0.0);
-        
-        return Math.round(totalMinutes * 100.0) / 100.0;
+
+        double average = waitMinutes.stream().mapToLong(Long::longValue).average().orElse(0.0);
+        return (double) Math.round(average);
+    }
+
+    private Optional<Long> waitingMinutes(QueueEntry entry) {
+        LocalDateTime start = entry.getQueueDate() != null ? entry.getQueueDate() : entry.getCreatedAt();
+        LocalDateTime end = entry.getCalledAt() != null
+            ? entry.getCalledAt()
+            : (entry.getStartedAt() != null ? entry.getStartedAt() : entry.getCompletedAt());
+
+        if (start == null || end == null || end.isBefore(start)) {
+            return Optional.empty();
+        }
+        return Optional.of(Math.max(0L, Duration.between(start, end).toMinutes()));
     }
 }
