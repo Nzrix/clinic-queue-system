@@ -1,7 +1,7 @@
 -- Insert demo staff user (password: demo123)
 -- Password is BCrypt hashed version of 'demo123'
 INSERT INTO users (username, password, full_name, role, active, created_at, updated_at)
-VALUES ('demo', '$2a$10$rB.HXiQ8ZGvKLHLWCf8pMeW8GZ8F8QQ8yQ8YQ8ZQ8aQ8bQ8cQ8dQ8e', 'สมชาย ใจดี', 'STAFF', TRUE, NOW(), NOW());
+VALUES ('demo', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'สมชาย ใจดี', 'STAFF', TRUE, NOW(), NOW());
 
 -- Insert sample patients
 INSERT INTO patients (name, phone, notes, active, created_at, updated_at) VALUES
