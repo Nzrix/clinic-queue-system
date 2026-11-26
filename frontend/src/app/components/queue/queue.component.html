@@ -1,110 +1,94 @@
-<div class="container">
-  <h1>จัดการคิว Walk-in</h1>
-  
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-value">{{ waitingCount }}</div>
-      <div class="stat-label">รอเรียก</div>
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>คิว Walk-in</h1>
+      <p>ออกคิว เรียกคิว และติดตามสถานะ</p>
     </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ activeCount }}</div>
-      <div class="stat-label">กำลังให้บริการ</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value">{{ completedCount }}</div>
-      <div class="stat-label">เสร็จสิ้นวันนี้</div>
-    </div>
-  </div>
-  
-  <div class="card">
-    <div class="toolbar">
-      <button class="btn btn-success" (click)="callNext()">🔔 เรียกคิวถัดไป</button>
-      <button class="btn btn-primary" (click)="openAddModal()">+ เพิ่มคิว</button>
-    </div>
-    
-    <div *ngIf="loading" class="loading">กำลังโหลดข้อมูล...</div>
-    
-    <div *ngIf="!loading">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>หมายเลขคิว</th>
-            <th>ผู้ป่วย</th>
-            <th>เบอร์โทร</th>
-            <th>สถานะ</th>
-            <th>เวลารอ</th>
-            <th>จัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let entry of queueEntries">
-            <td class="queue-number">{{ entry.queueNumber }}</td>
-            <td>{{ entry.patientName }}</td>
-            <td>{{ entry.patientPhone }}</td>
-            <td>
-              <span class="badge" [ngClass]="statusClasses[entry.status]">
-                {{ statusLabels[entry.status] }}
-              </span>
-            </td>
-            <td>{{ entry.createdAt | date:'HH:mm' }}</td>
-            <td>
-              <button 
-                *ngIf="entry.status === 'CALLED'"
-                class="btn btn-success btn-sm" 
-                (click)="updateStatus(entry.id!, 'IN_SERVICE')">
-                เริ่มบริการ
-              </button>
-              <button 
-                *ngIf="entry.status === 'IN_SERVICE'"
-                class="btn btn-success btn-sm" 
-                (click)="updateStatus(entry.id!, 'COMPLETED')">
-                เสร็จสิ้น
-              </button>
-              <button 
-                *ngIf="entry.status === 'WAITING'"
-                class="btn btn-secondary btn-sm" 
-                (click)="updateStatus(entry.id!, 'SKIPPED')">
-                ข้าม
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <div *ngIf="queueEntries.length === 0" class="no-data">
-        ไม่มีคิววันนี้
-      </div>
+    <div class="actions">
+      <button mat-stroked-button color="primary" type="button" (click)="callNext()">
+        <mat-icon>campaign</mat-icon>
+        เรียกคิวถัดไป
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="openAdd()">
+        <mat-icon>add</mat-icon>
+        เพิ่มคิว
+      </button>
     </div>
   </div>
-</div>
 
-<!-- Modal -->
-<div class="modal" *ngIf="showModal">
-  <div class="modal-content">
-    <h2>เพิ่มคิว Walk-in</h2>
-    
-    <div *ngIf="error" class="alert alert-error">{{ error }}</div>
-    
-    <form (ngSubmit)="addToQueue()">
-      <div class="form-group">
-        <label>ผู้ป่วย *</label>
-        <select class="form-control" [(ngModel)]="selectedPatientId" name="patientId" required>
-          <option value="0">-- เลือกผู้ป่วย --</option>
-          <option *ngFor="let patient of patients" [value]="patient.id">
-            {{ patient.name }} ({{ patient.phone }})
-          </option>
-        </select>
+  <div class="stats-grid">
+    <mat-card class="stat">
+      <div class="value">{{ waitingCount }}</div>
+      <div class="label">รอเรียก</div>
+    </mat-card>
+    <mat-card class="stat">
+      <div class="value">{{ activeCount }}</div>
+      <div class="label">กำลังให้บริการ</div>
+    </mat-card>
+    <mat-card class="stat">
+      <div class="value">{{ completedCount }}</div>
+      <div class="label">เสร็จสิ้นวันนี้</div>
+    </mat-card>
+  </div>
+
+  <div class="surface-card">
+    <div class="loading-state" *ngIf="loading">
+      <mat-spinner diameter="36"></mat-spinner>
+      <div>กำลังโหลด...</div>
+    </div>
+
+    <div class="table-wrap" *ngIf="!loading">
+      <table mat-table [dataSource]="dataSource" matSort class="full-width">
+        <ng-container matColumnDef="queueNumber">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>หมายเลขคิว</th>
+          <td mat-cell *matCellDef="let row" class="queue-number">{{ row.queueNumber }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="patientName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>ผู้ป่วย</th>
+          <td mat-cell *matCellDef="let row">{{ row.patientName }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="patientPhone">
+          <th mat-header-cell *matHeaderCellDef>เบอร์โทร</th>
+          <td mat-cell *matCellDef="let row">{{ row.patientPhone }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>สถานะ</th>
+          <td mat-cell *matCellDef="let row">
+            <mat-chip class="status-chip" [ngClass]="row.status">{{ statusLabels[row.status] }}</mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>เวลารอ</th>
+          <td mat-cell *matCellDef="let row">{{ row.createdAt | date:'HH:mm' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>จัดการ</th>
+          <td mat-cell *matCellDef="let row">
+            <button *ngIf="row.status === 'CALLED'" mat-stroked-button color="primary" type="button" (click)="updateStatus(row.id, 'IN_SERVICE')">
+              เริ่มบริการ
+            </button>
+            <button *ngIf="row.status === 'IN_SERVICE'" mat-stroked-button color="accent" type="button" (click)="updateStatus(row.id, 'COMPLETED')">
+              เสร็จสิ้น
+            </button>
+            <button *ngIf="row.status === 'WAITING'" mat-button type="button" (click)="updateStatus(row.id, 'SKIPPED')">
+              ข้าม
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <div class="empty-state" *ngIf="dataSource.data.length === 0">
+        <mat-icon>queue</mat-icon>
+        <div>ไม่มีคิววันนี้</div>
       </div>
-      
-      <div class="form-group">
-        <label>หมายเหตุ</label>
-        <textarea class="form-control" [(ngModel)]="notes" name="notes" rows="3"></textarea>
-      </div>
-      
-      <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" (click)="closeModal()">ยกเลิก</button>
-        <button type="submit" class="btn btn-primary">เพิ่มคิว</button>
-      </div>
-    </form>
+    </div>
   </div>
 </div>

@@ -1,85 +1,77 @@
-<div class="container">
-  <h1>จัดการผู้ป่วย</h1>
-  
-  <div class="card">
-    <div class="toolbar">
-      <div class="search-box">
-        <input 
-          type="text" 
-          class="form-control" 
-          [(ngModel)]="searchTerm"
-          (keyup.enter)="onSearch()"
-          placeholder="ค้นหาชื่อหรือเบอร์โทร...">
-        <button class="btn btn-primary" (click)="onSearch()">ค้นหา</button>
-      </div>
-      <button class="btn btn-success" (click)="openAddModal()">+ เพิ่มผู้ป่วย</button>
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>จัดการผู้ป่วย</h1>
+      <p>ค้นหา เพิ่ม และแก้ไขข้อมูลผู้ป่วย</p>
     </div>
-    
-    <div *ngIf="loading" class="loading">กำลังโหลดข้อมูล...</div>
-    
-    <div *ngIf="!loading">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ชื่อ</th>
-            <th>เบอร์โทร</th>
-            <th>หมายเหตุ</th>
-            <th>จัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let patient of patients">
-            <td>{{ patient.name }}</td>
-            <td>{{ patient.phone }}</td>
-            <td>{{ patient.notes || '-' }}</td>
-            <td>
-              <button class="btn btn-primary btn-sm" (click)="openEditModal(patient)">แก้ไข</button>
-              <button class="btn btn-danger btn-sm" (click)="deletePatient(patient.id!)">ลบ</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      
-      <div class="pagination">
-        <button class="btn btn-secondary" [disabled]="currentPage === 0" (click)="previousPage()">
-          ก่อนหน้า
-        </button>
-        <span>หน้า {{ currentPage + 1 }} จาก {{ totalPages }}</span>
-        <button class="btn btn-secondary" [disabled]="currentPage >= totalPages - 1" (click)="nextPage()">
-          ถัดไป
-        </button>
-      </div>
-    </div>
+    <button mat-flat-button color="primary" type="button" (click)="openAdd()">
+      <mat-icon>person_add</mat-icon>
+      เพิ่มผู้ป่วย
+    </button>
   </div>
-</div>
 
-<!-- Modal -->
-<div class="modal" *ngIf="showModal">
-  <div class="modal-content">
-    <h2>{{ editMode ? 'แก้ไขผู้ป่วย' : 'เพิ่มผู้ป่วย' }}</h2>
-    
-    <div *ngIf="error" class="alert alert-error">{{ error }}</div>
-    
-    <form (ngSubmit)="savePatient()">
-      <div class="form-group">
-        <label>ชื่อ-นามสกุล *</label>
-        <input type="text" class="form-control" [(ngModel)]="currentPatient.name" name="name" required>
+  <div class="surface-card">
+    <div class="toolbar-row">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>ค้นหาชื่อหรือเบอร์โทร</mat-label>
+        <input matInput [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" placeholder="เช่น สมชาย หรือ 08...">
+        <button mat-icon-button matSuffix type="button" (click)="onSearch()" aria-label="ค้นหา">
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+    </div>
+
+    <div class="loading-state" *ngIf="loading">
+      <mat-spinner diameter="36"></mat-spinner>
+      <div>กำลังโหลด...</div>
+    </div>
+
+    <div class="table-wrap" *ngIf="!loading">
+      <table mat-table [dataSource]="dataSource" matSort class="full-width">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>ชื่อ</th>
+          <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="phone">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>เบอร์โทร</th>
+          <td mat-cell *matCellDef="let row">{{ row.phone }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="notes">
+          <th mat-header-cell *matHeaderCellDef>หมายเหตุ</th>
+          <td mat-cell *matCellDef="let row">{{ row.notes || '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>จัดการ</th>
+          <td mat-cell *matCellDef="let row">
+            <button mat-icon-button color="primary" type="button" matTooltip="แก้ไข" (click)="openEdit(row)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" type="button" matTooltip="ลบ" (click)="deletePatient(row)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <div class="empty-state" *ngIf="dataSource.data.length === 0">
+        <mat-icon>person_off</mat-icon>
+        <div>ไม่พบผู้ป่วย</div>
       </div>
-      
-      <div class="form-group">
-        <label>เบอร์โทรศัพท์ *</label>
-        <input type="text" class="form-control" [(ngModel)]="currentPatient.phone" name="phone" required>
-      </div>
-      
-      <div class="form-group">
-        <label>หมายเหตุ</label>
-        <textarea class="form-control" [(ngModel)]="currentPatient.notes" name="notes" rows="3"></textarea>
-      </div>
-      
-      <div class="modal-actions">
-        <button type="button" class="btn btn-secondary" (click)="closeModal()">ยกเลิก</button>
-        <button type="submit" class="btn btn-primary">บันทึก</button>
-      </div>
-    </form>
+
+      <mat-paginator
+        [length]="totalElements"
+        [pageIndex]="pageIndex"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 20]"
+        (page)="onPage($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </div>
   </div>
 </div>

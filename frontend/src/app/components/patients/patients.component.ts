@@ -1,30 +1,60 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { PatientService } from '../../services/patient.service';
 import { Patient } from '../../models/patient.model';
+import { PatientDialogComponent } from './patient-dialog.component';
+import { ConfirmDialogComponent } from '../shared/confirm-dialog.component';
 
 @Component({
   selector: 'app-patients',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule
+  ],
   templateUrl: './patients.component.html',
   styleUrl: './patients.component.css'
 })
 export class PatientsComponent implements OnInit {
-  patients: Patient[] = [];
-  searchTerm = '';
+  displayedColumns = ['name', 'phone', 'notes', 'actions'];
+  dataSource = new MatTableDataSource<Patient>([]);
   loading = false;
-  currentPage = 0;
-  totalPages = 0;
+  searchTerm = '';
+  totalElements = 0;
   pageSize = 10;
-  
-  showModal = false;
-  editMode = false;
-  currentPatient: Patient = this.getEmptyPatient();
-  error = '';
+  pageIndex = 0;
 
-  constructor(private patientService: PatientService) {}
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
+  constructor(
+    private patientService: PatientService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit() {
     this.loadPatients();
@@ -32,95 +62,86 @@ export class PatientsComponent implements OnInit {
 
   loadPatients() {
     this.loading = true;
-    this.patientService.getPatients(this.searchTerm, this.currentPage, this.pageSize).subscribe({
+    this.patientService.getPatients(this.searchTerm, this.pageIndex, this.pageSize).subscribe({
       next: (response) => {
-        this.patients = response.content;
-        this.totalPages = response.totalPages;
+        this.dataSource.data = response.content;
+        this.totalElements = response.totalElements;
         this.loading = false;
+        setTimeout(() => {
+          if (this.sort) {
+            this.dataSource.sort = this.sort;
+          }
+        });
       },
-      error: (err) => {
-        console.error('Error loading patients:', err);
+      error: () => {
         this.loading = false;
+        this.snackBar.open('โหลดข้อมูลผู้ป่วยไม่สำเร็จ', 'ปิด', { duration: 3500 });
       }
     });
   }
 
   onSearch() {
-    this.currentPage = 0;
+    this.pageIndex = 0;
     this.loadPatients();
   }
 
-  nextPage() {
-    if (this.currentPage < this.totalPages - 1) {
-      this.currentPage++;
-      this.loadPatients();
-    }
+  onPage(event: any) {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadPatients();
   }
 
-  previousPage() {
-    if (this.currentPage > 0) {
-      this.currentPage--;
-      this.loadPatients();
-    }
-  }
-
-  openAddModal() {
-    this.editMode = false;
-    this.currentPatient = this.getEmptyPatient();
-    this.showModal = true;
-    this.error = '';
-  }
-
-  openEditModal(patient: Patient) {
-    this.editMode = true;
-    this.currentPatient = { ...patient };
-    this.showModal = true;
-    this.error = '';
-  }
-
-  closeModal() {
-    this.showModal = false;
-    this.currentPatient = this.getEmptyPatient();
-    this.error = '';
-  }
-
-  savePatient() {
-    this.error = '';
-    
-    if (!this.currentPatient.name || !this.currentPatient.phone) {
-      this.error = 'กรุณากรอกชื่อและเบอร์โทรศัพท์';
-      return;
-    }
-
-    const request = this.editMode
-      ? this.patientService.updatePatient(this.currentPatient.id!, this.currentPatient)
-      : this.patientService.createPatient(this.currentPatient);
-
-    request.subscribe({
-      next: () => {
-        this.loadPatients();
-        this.closeModal();
-      },
-      error: (err) => {
-        this.error = 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
-      }
+  openAdd() {
+    const ref = this.dialog.open(PatientDialogComponent, {
+      width: '480px',
+      data: { patient: { name: '', phone: '', notes: '' }, editMode: false }
+    });
+    ref.afterClosed().subscribe(result => {
+      if (!result) return;
+      this.patientService.createPatient(result).subscribe({
+        next: () => {
+          this.snackBar.open('เพิ่มผู้ป่วยแล้ว', 'ปิด', { duration: 2500 });
+          this.loadPatients();
+        },
+        error: () => this.snackBar.open('บันทึกไม่สำเร็จ', 'ปิด', { duration: 3500 })
+      });
     });
   }
 
-  deletePatient(id: number) {
-    if (confirm('ต้องการลบผู้ป่วยรายนี้หรือไม่?')) {
-      this.patientService.deletePatient(id).subscribe({
+  openEdit(patient: Patient) {
+    const ref = this.dialog.open(PatientDialogComponent, {
+      width: '480px',
+      data: { patient: { ...patient }, editMode: true }
+    });
+    ref.afterClosed().subscribe(result => {
+      if (!result) return;
+      this.patientService.updatePatient(patient.id!, result).subscribe({
         next: () => {
+          this.snackBar.open('อัปเดตผู้ป่วยแล้ว', 'ปิด', { duration: 2500 });
           this.loadPatients();
         },
-        error: (err) => {
-          alert('เกิดข้อผิดพลาดในการลบข้อมูล');
-        }
+        error: () => this.snackBar.open('บันทึกไม่สำเร็จ', 'ปิด', { duration: 3500 })
       });
-    }
+    });
   }
 
-  private getEmptyPatient(): Patient {
-    return { name: '', phone: '', notes: '' };
+  deletePatient(patient: Patient) {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'ลบผู้ป่วย',
+        message: `ต้องการลบ "${patient.name}" หรือไม่?`
+      }
+    });
+    ref.afterClosed().subscribe(ok => {
+      if (!ok) return;
+      this.patientService.deletePatient(patient.id!).subscribe({
+        next: () => {
+          this.snackBar.open('ลบผู้ป่วยแล้ว', 'ปิด', { duration: 2500 });
+          this.loadPatients();
+        },
+        error: () => this.snackBar.open('ลบไม่สำเร็จ', 'ปิด', { duration: 3500 })
+      });
+    });
   }
 }

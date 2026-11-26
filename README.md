@@ -32,9 +32,10 @@ A full-stack web application for managing clinic appointments and walk-in queues
 
 **Frontend:**
 - Angular 17 (Standalone Components)
-- TypeScript
-- RxJS
-- Responsive CSS
+- Angular Material 17 (toolbar, sidenav, tables, dialogs, snackbar, chips, datepicker)
+- ng2-charts 5 + Chart.js 4 (dashboard charts)
+- Noto Sans Thai / Sarabun
+- TypeScript, RxJS
 
 **Backend:**
 - Spring Boot 3.2
@@ -274,9 +275,10 @@ This project is a portfolio demonstration and is provided as-is for educational 
 
 **Frontend:**
 - Angular 17 (Standalone Components)
-- TypeScript
-- RxJS
-- Responsive CSS
+- Angular Material 17 (toolbar, sidenav, tables, dialogs, snackbar, chips, datepicker)
+- ng2-charts 5 + Chart.js 4 (แดชบอร์ด)
+- Noto Sans Thai / Sarabun
+- TypeScript, RxJS
 
 **Backend:**
 - Spring Boot 3.2
