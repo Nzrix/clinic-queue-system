@@ -1,0 +1,85 @@
+<div class="container">
+  <h1>จัดการผู้ป่วย</h1>
+  
+  <div class="card">
+    <div class="toolbar">
+      <div class="search-box">
+        <input 
+          type="text" 
+          class="form-control" 
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="onSearch()"
+          placeholder="ค้นหาชื่อหรือเบอร์โทร...">
+        <button class="btn btn-primary" (click)="onSearch()">ค้นหา</button>
+      </div>
+      <button class="btn btn-success" (click)="openAddModal()">+ เพิ่มผู้ป่วย</button>
+    </div>
+    
+    <div *ngIf="loading" class="loading">กำลังโหลดข้อมูล...</div>
+    
+    <div *ngIf="!loading">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ชื่อ</th>
+            <th>เบอร์โทร</th>
+            <th>หมายเหตุ</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let patient of patients">
+            <td>{{ patient.name }}</td>
+            <td>{{ patient.phone }}</td>
+            <td>{{ patient.notes || '-' }}</td>
+            <td>
+              <button class="btn btn-primary btn-sm" (click)="openEditModal(patient)">แก้ไข</button>
+              <button class="btn btn-danger btn-sm" (click)="deletePatient(patient.id!)">ลบ</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="pagination">
+        <button class="btn btn-secondary" [disabled]="currentPage === 0" (click)="previousPage()">
+          ก่อนหน้า
+        </button>
+        <span>หน้า {{ currentPage + 1 }} จาก {{ totalPages }}</span>
+        <button class="btn btn-secondary" [disabled]="currentPage >= totalPages - 1" (click)="nextPage()">
+          ถัดไป
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" *ngIf="showModal">
+  <div class="modal-content">
+    <h2>{{ editMode ? 'แก้ไขผู้ป่วย' : 'เพิ่มผู้ป่วย' }}</h2>
+    
+    <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+    
+    <form (ngSubmit)="savePatient()">
+      <div class="form-group">
+        <label>ชื่อ-นามสกุล *</label>
+        <input type="text" class="form-control" [(ngModel)]="currentPatient.name" name="name" required>
+      </div>
+      
+      <div class="form-group">
+        <label>เบอร์โทรศัพท์ *</label>
+        <input type="text" class="form-control" [(ngModel)]="currentPatient.phone" name="phone" required>
+      </div>
+      
+      <div class="form-group">
+        <label>หมายเหตุ</label>
+        <textarea class="form-control" [(ngModel)]="currentPatient.notes" name="notes" rows="3"></textarea>
+      </div>
+      
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>

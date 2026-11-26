@@ -1,0 +1,120 @@
+<div class="container">
+  <h1>จัดการนัดหมาย</h1>
+  
+  <div class="card">
+    <div class="toolbar">
+      <div class="date-selector">
+        <label>วันที่:</label>
+        <input 
+          type="date" 
+          class="form-control" 
+          [(ngModel)]="selectedDate"
+          (change)="onDateChange()">
+      </div>
+      <button class="btn btn-success" (click)="openAddModal()">+ เพิ่มนัดหมาย</button>
+    </div>
+    
+    <div *ngIf="loading" class="loading">กำลังโหลดข้อมูล...</div>
+    
+    <div *ngIf="!loading">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>เวลา</th>
+            <th>ผู้ป่วย</th>
+            <th>เบอร์โทร</th>
+            <th>ระยะเวลา</th>
+            <th>สถานะ</th>
+            <th>หมายเหตุ</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let apt of appointments">
+            <td>{{ formatTime(apt.appointmentTime) }}</td>
+            <td>{{ apt.patientName }}</td>
+            <td>{{ apt.patientPhone }}</td>
+            <td>{{ apt.durationMinutes }} นาที</td>
+            <td>
+              <span class="badge" [ngClass]="statusClasses[apt.status]">
+                {{ statusLabels[apt.status] }}
+              </span>
+            </td>
+            <td>{{ apt.notes || '-' }}</td>
+            <td>
+              <button 
+                *ngIf="apt.status === 'SCHEDULED'"
+                class="btn btn-success btn-sm" 
+                (click)="updateStatus(apt.id!, 'COMPLETED')">
+                เสร็จสิ้น
+              </button>
+              <button class="btn btn-primary btn-sm" (click)="openEditModal(apt)">แก้ไข</button>
+              <button 
+                *ngIf="apt.status === 'SCHEDULED'"
+                class="btn btn-danger btn-sm" 
+                (click)="cancelAppointment(apt.id!)">
+                ยกเลิก
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div *ngIf="appointments.length === 0" class="no-data">
+        ไม่มีนัดหมายในวันที่เลือก
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" *ngIf="showModal">
+  <div class="modal-content">
+    <h2>{{ editMode ? 'แก้ไขนัดหมาย' : 'เพิ่มนัดหมาย' }}</h2>
+    
+    <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+    
+    <form (ngSubmit)="saveAppointment()">
+      <div class="form-group">
+        <label>ผู้ป่วย *</label>
+        <select class="form-control" [(ngModel)]="currentAppointment.patientId" name="patientId" required>
+          <option value="0">-- เลือกผู้ป่วย --</option>
+          <option *ngFor="let patient of patients" [value]="patient.id">
+            {{ patient.name }} ({{ patient.phone }})
+          </option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>วันที่และเวลา *</label>
+        <input 
+          type="datetime-local" 
+          class="form-control" 
+          [(ngModel)]="currentAppointment.appointmentTime" 
+          name="appointmentTime" 
+          required>
+      </div>
+      
+      <div class="form-group">
+        <label>ระยะเวลา (นาที) *</label>
+        <input 
+          type="number" 
+          class="form-control" 
+          [(ngModel)]="currentAppointment.durationMinutes" 
+          name="durationMinutes" 
+          min="15"
+          required>
+      </div>
+      
+      <div class="form-group">
+        <label>หมายเหตุ</label>
+        <textarea class="form-control" [(ngModel)]="currentAppointment.notes" name="notes" rows="3"></textarea>
+      </div>
+      
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>

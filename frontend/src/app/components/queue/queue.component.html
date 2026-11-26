@@ -1,0 +1,110 @@
+<div class="container">
+  <h1>จัดการคิว Walk-in</h1>
+  
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{ waitingCount }}</div>
+      <div class="stat-label">รอเรียก</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ activeCount }}</div>
+      <div class="stat-label">กำลังให้บริการ</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ completedCount }}</div>
+      <div class="stat-label">เสร็จสิ้นวันนี้</div>
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="toolbar">
+      <button class="btn btn-success" (click)="callNext()">🔔 เรียกคิวถัดไป</button>
+      <button class="btn btn-primary" (click)="openAddModal()">+ เพิ่มคิว</button>
+    </div>
+    
+    <div *ngIf="loading" class="loading">กำลังโหลดข้อมูล...</div>
+    
+    <div *ngIf="!loading">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>หมายเลขคิว</th>
+            <th>ผู้ป่วย</th>
+            <th>เบอร์โทร</th>
+            <th>สถานะ</th>
+            <th>เวลารอ</th>
+            <th>จัดการ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of queueEntries">
+            <td class="queue-number">{{ entry.queueNumber }}</td>
+            <td>{{ entry.patientName }}</td>
+            <td>{{ entry.patientPhone }}</td>
+            <td>
+              <span class="badge" [ngClass]="statusClasses[entry.status]">
+                {{ statusLabels[entry.status] }}
+              </span>
+            </td>
+            <td>{{ entry.createdAt | date:'HH:mm' }}</td>
+            <td>
+              <button 
+                *ngIf="entry.status === 'CALLED'"
+                class="btn btn-success btn-sm" 
+                (click)="updateStatus(entry.id!, 'IN_SERVICE')">
+                เริ่มบริการ
+              </button>
+              <button 
+                *ngIf="entry.status === 'IN_SERVICE'"
+                class="btn btn-success btn-sm" 
+                (click)="updateStatus(entry.id!, 'COMPLETED')">
+                เสร็จสิ้น
+              </button>
+              <button 
+                *ngIf="entry.status === 'WAITING'"
+                class="btn btn-secondary btn-sm" 
+                (click)="updateStatus(entry.id!, 'SKIPPED')">
+                ข้าม
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div *ngIf="queueEntries.length === 0" class="no-data">
+        ไม่มีคิววันนี้
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" *ngIf="showModal">
+  <div class="modal-content">
+    <h2>เพิ่มคิว Walk-in</h2>
+    
+    <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+    
+    <form (ngSubmit)="addToQueue()">
+      <div class="form-group">
+        <label>ผู้ป่วย *</label>
+        <select class="form-control" [(ngModel)]="selectedPatientId" name="patientId" required>
+          <option value="0">-- เลือกผู้ป่วย --</option>
+          <option *ngFor="let patient of patients" [value]="patient.id">
+            {{ patient.name }} ({{ patient.phone }})
+          </option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>หมายเหตุ</label>
+        <textarea class="form-control" [(ngModel)]="notes" name="notes" rows="3"></textarea>
+      </div>
+      
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">ยกเลิก</button>
+        <button type="submit" class="btn btn-primary">เพิ่มคิว</button>
+      </div>
+    </form>
+  </div>
+</div>
