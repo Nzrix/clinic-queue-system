@@ -1,0 +1,77 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>จัดการผู้ป่วย</h1>
+      <p>ค้นหา เพิ่ม และแก้ไขข้อมูลผู้ป่วย</p>
+    </div>
+    <button mat-flat-button color="primary" type="button" (click)="openAdd()">
+      <mat-icon>person_add</mat-icon>
+      เพิ่มผู้ป่วย
+    </button>
+  </div>
+
+  <div class="surface-card">
+    <div class="toolbar-row">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>ค้นหาชื่อหรือเบอร์โทร</mat-label>
+        <input matInput [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" placeholder="เช่น สมชาย หรือ 08...">
+        <button mat-icon-button matSuffix type="button" (click)="onSearch()" aria-label="ค้นหา">
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+    </div>
+
+    <div class="loading-state" *ngIf="loading">
+      <mat-spinner diameter="36"></mat-spinner>
+      <div>กำลังโหลด...</div>
+    </div>
+
+    <div class="table-wrap" *ngIf="!loading">
+      <table mat-table [dataSource]="dataSource" matSort class="full-width">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>ชื่อ</th>
+          <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="phone">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>เบอร์โทร</th>
+          <td mat-cell *matCellDef="let row">{{ row.phone }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="notes">
+          <th mat-header-cell *matHeaderCellDef>หมายเหตุ</th>
+          <td mat-cell *matCellDef="let row">{{ row.notes || '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>จัดการ</th>
+          <td mat-cell *matCellDef="let row">
+            <button mat-icon-button color="primary" type="button" matTooltip="แก้ไข" (click)="openEdit(row)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" type="button" matTooltip="ลบ" (click)="deletePatient(row)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+
+      <div class="empty-state" *ngIf="dataSource.data.length === 0">
+        <mat-icon>person_off</mat-icon>
+        <div>ไม่พบผู้ป่วย</div>
+      </div>
+
+      <mat-paginator
+        [length]="totalElements"
+        [pageIndex]="pageIndex"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 20]"
+        (page)="onPage($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </div>
+</div>

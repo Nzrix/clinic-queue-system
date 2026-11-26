@@ -1,0 +1,16 @@
+.search-field {
+  min-width: 240px;
+  flex: 1;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  min-width: 860px;
+}
+
+td.mat-mdc-cell, th.mat-mdc-header-cell {
+  padding: 12px 16px;
+}

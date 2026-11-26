@@ -1,0 +1,48 @@
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  padding: 18px;
+  border-radius: 16px;
+  text-align: center;
+}
+
+.stat .value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--clinic-primary);
+}
+
+.stat .label {
+  color: var(--clinic-muted);
+}
+
+.queue-number {
+  font-weight: 700;
+  color: var(--clinic-primary);
+  font-size: 1.1rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  min-width: 760px;
+}
+
+@media (max-width: 700px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

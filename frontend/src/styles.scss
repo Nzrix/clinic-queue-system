@@ -1,0 +1,140 @@
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+$clinic-primary: mat.define-palette(mat.$teal-palette, 700, 500, 900);
+$clinic-accent: mat.define-palette(mat.$cyan-palette, 600, 400, 800);
+$clinic-warn: mat.define-palette(mat.$red-palette, 600);
+
+$clinic-theme: mat.define-light-theme((
+  color: (
+    primary: $clinic-primary,
+    accent: $clinic-accent,
+    warn: $clinic-warn,
+  ),
+  typography: mat.define-typography-config(
+    $font-family: '"Noto Sans Thai", "Sarabun", "Helvetica Neue", sans-serif',
+  ),
+  density: 0,
+));
+
+@include mat.all-component-themes($clinic-theme);
+
+:root {
+  --clinic-bg: #f0f7f6;
+  --clinic-surface: #ffffff;
+  --clinic-ink: #1e293b;
+  --clinic-muted: #64748b;
+  --clinic-primary: #0f766e;
+  --clinic-primary-soft: #ccfbf1;
+  --clinic-accent: #0891b2;
+  --clinic-border: #d7e5e2;
+  --clinic-shadow: 0 10px 30px rgba(15, 118, 110, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: "Noto Sans Thai", "Sarabun", "Helvetica Neue", sans-serif;
+  background: radial-gradient(circle at top left, #e6fffa 0%, var(--clinic-bg) 45%, #eef6f8 100%);
+  color: var(--clinic-ink);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--clinic-ink);
+}
+
+.page-header p {
+  margin: 6px 0 0;
+  color: var(--clinic-muted);
+}
+
+.surface-card {
+  background: var(--clinic-surface);
+  border: 1px solid var(--clinic-border);
+  border-radius: 16px;
+  box-shadow: var(--clinic-shadow);
+  overflow: hidden;
+}
+
+.toolbar-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 16px;
+  border-bottom: 1px solid var(--clinic-border);
+}
+
+.full-width {
+  width: 100%;
+}
+
+.empty-state,
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 24px;
+  color: var(--clinic-muted);
+  text-align: center;
+}
+
+.empty-state mat-icon,
+.loading-state mat-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  opacity: 0.7;
+}
+
+.status-chip.WAITING { --mdc-chip-elevated-container-color: #fef3c7; --mdc-chip-label-text-color: #92400e; }
+.status-chip.CALLED { --mdc-chip-elevated-container-color: #cffafe; --mdc-chip-label-text-color: #155e75; }
+.status-chip.IN_SERVICE { --mdc-chip-elevated-container-color: #dbeafe; --mdc-chip-label-text-color: #1e40af; }
+.status-chip.COMPLETED { --mdc-chip-elevated-container-color: #d1fae5; --mdc-chip-label-text-color: #065f46; }
+.status-chip.SKIPPED { --mdc-chip-elevated-container-color: #e2e8f0; --mdc-chip-label-text-color: #475569; }
+.status-chip.SCHEDULED { --mdc-chip-elevated-container-color: #cffafe; --mdc-chip-label-text-color: #155e75; }
+.status-chip.CANCELLED { --mdc-chip-elevated-container-color: #fee2e2; --mdc-chip-label-text-color: #991b1b; }
+.status-chip.NO_SHOW { --mdc-chip-elevated-container-color: #ffedd5; --mdc-chip-label-text-color: #9a3412; }
+
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 1.4rem;
+  }
+}
