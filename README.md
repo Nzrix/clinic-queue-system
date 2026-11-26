@@ -8,7 +8,7 @@
 ## 🇬🇧 English
 
 ### Overview
-A full-stack web application for managing clinic appointments and walk-in queues. Built with Angular 17, Spring Boot 3, and MySQL 8, featuring JWT authentication, real-time queue management, and comprehensive patient tracking.
+A full-stack web application for managing clinic appointments and walk-in queues. Built with Angular 17, Spring Boot 3, and MySQL 8, featuring JWT authentication, queue management, and patient tracking. This is a portfolio demonstration project showcasing clean code practices and full-stack development skills.
 
 ### Features
 - **Staff Authentication**: Secure JWT-based login system
@@ -21,10 +21,10 @@ A full-stack web application for managing clinic appointments and walk-in queues
   - Issue queue numbers automatically
   - Queue status tracking (waiting / called / in service / done / skipped)
   - "Call Next" functionality
-  - Public display screen for patients
+  - Public display screen for patients (auto-refreshes every 5 seconds)
 - **Dashboard**: 
-  - Real-time statistics (today's appointments, queue counts)
-  - 7-day historical charts
+  - Today's statistics (appointments, queue counts)
+  - 7-day historical data table
   - Average waiting time calculation
 - **Timezone Support**: Consistent Asia/Bangkok timezone handling throughout
 
@@ -217,46 +217,29 @@ cd frontend && npm test
 ### Key Implementation Highlights
 
 #### 1. Double-Booking Prevention
-The system uses a custom JPA query to check for time slot conflicts:
-```java
-@Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM Appointment a " +
-       "WHERE a.status = 'SCHEDULED' " +
-       "AND ((a.appointmentTime <= :startTime AND :startTime < ...) OR ...)")
-boolean hasConflictingAppointment(@Param("startTime") LocalDateTime startTime, ...);
-```
+The system uses a custom JPA query to check for time slot conflicts before saving appointments.
 
 #### 2. Queue Number Generation
-Automatic sequential queue numbers per day:
-```java
-private String generateQueueNumber(LocalDate date) {
-    // Get today's last queue, increment, format as Q001, Q002, etc.
-}
-```
+Automatic sequential queue numbers per day (Q001, Q002, etc.)
 
 #### 3. Timezone Consistency
-All datetime handling uses Asia/Bangkok timezone:
-- Database connection: `serverTimezone=Asia/Bangkok`
-- Hibernate: `hibernate.jdbc.time_zone: Asia/Bangkok`
-- Application logic: `ZoneId.of("Asia/Bangkok")`
+All datetime handling uses Asia/Bangkok timezone consistently across database, backend, and frontend.
 
 #### 4. JWT Authentication
-Stateless authentication with token-based security:
-- Token expiration: 24 hours
-- Automatic token refresh on client side
-- HTTP interceptor adds Authorization header to all requests
+Stateless authentication with token-based security (24-hour expiration, HTTP interceptor for auth headers)
 
-### What I'd Improve Next
+### What Could Be Improved
 
-1. **Real-time Updates**: WebSocket support for live queue updates
-2. **SMS Notifications**: Integrate SMS API to notify patients when their queue is called
-3. **Multi-clinic Support**: Add clinic/branch management for multi-location businesses
-4. **Advanced Reporting**: Export reports to PDF/Excel, more analytics
-5. **Patient Portal**: Allow patients to book appointments and check queue status online
-6. **Mobile App**: Native iOS/Android apps with push notifications
-7. **Role-based Access**: Different permissions for doctors, nurses, and admin staff
-8. **Appointment Reminders**: Automated email/SMS reminders before appointments
-9. **Payment Integration**: Track payments and generate receipts
-10. **Medical Records**: Basic EMR features (diagnoses, prescriptions, medical history)
+1. **Real-time Updates**: WebSocket for live queue updates instead of polling
+2. **SMS Notifications**: Notify patients when their queue is called
+3. **Multi-clinic Support**: Branch management for multi-location businesses
+4. **Advanced Reporting**: Export to PDF/Excel, more detailed analytics
+5. **Patient Self-Service**: Online booking and queue checking
+6. **Mobile Apps**: iOS/Android apps with push notifications
+7. **Role-based Access**: Different permissions for doctors, nurses, admin
+8. **Appointment Reminders**: Automated email/SMS reminders
+9. **Payment Tracking**: Receipt generation and payment history
+10. **Medical Records**: Basic EMR features (diagnoses, prescriptions)
 
 ### License
 This project is a portfolio demonstration and is provided as-is for educational purposes.
@@ -487,18 +470,18 @@ cd frontend && npm test
 #### 4. JWT Authentication
 Authentication แบบ stateless ด้วย token
 
-### สิ่งที่อยากพัฒนาต่อ
+### สิ่งที่สามารถพัฒนาต่อได้
 
-1. **อัปเดตแบบเรียลไทม์**: ใช้ WebSocket สำหรับอัปเดตคิวสด
+1. **อัปเดตแบบเรียลไทม์**: ใช้ WebSocket แทนการ polling
 2. **แจ้งเตือน SMS**: แจ้งผู้ป่วยเมื่อถึงคิว
-3. **รองรับหลายสาขา**: จัดการหลาย คลินิก/สาขา
-4. **รายงานขั้นสูง**: ส่งออก PDF/Excel, วิเคราะห์ข้อมูลเพิ่มเติม
-5. **Patient Portal**: ให้ผู้ป่วยจองนัดและเช็คคิวออนไลน์
-6. **แอปมือถือ**: แอป iOS/Android พร้อม push notification
+3. **รองรับหลายสาขา**: จัดการหลายคลินิก/สาขา
+4. **รายงานขั้นสูง**: ส่งออก PDF/Excel, วิเคราะห์เชิงลึก
+5. **Self-Service สำหรับผู้ป่วย**: จองนัดและเช็คคิวออนไลน์
+6. **แอปมือถือ**: iOS/Android พร้อม push notification
 7. **จัดการสิทธิ์**: แยกสิทธิ์แพทย์ พยาบาล แอดมิน
-8. **เตือนนัดหมาย**: ส่ง email/SMS อัตโนมัติก่อนถึงนัด
-9. **ระบบชำระเงิน**: บันทึกการชำระเงินและออกใบเสร็จ
-10. **ประวัติการรักษา**: ฟีเจอร์ EMR พื้นฐาน (การวินิจฉัย ใบสั่งยา ประวัติ)
+8. **เตือนนัดหมาย**: ส่ง email/SMS อัตโนมัติ
+9. **บันทึกการชำระเงิน**: ออกใบเสร็จและประวัติการชำระ
+10. **ประวัติการรักษา**: ฟีเจอร์ EMR พื้นฐาน
 
 ### License
 โปรเจกต์นี้สร้างขึ้นเพื่อเป็น portfolio และให้ใช้เพื่อการศึกษาเท่านั้น
