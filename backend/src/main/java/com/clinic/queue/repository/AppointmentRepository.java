@@ -34,16 +34,29 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
         @Param("status") Appointment.AppointmentStatus status
     );
     
-    @Query(value = "SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END FROM appointments a " +
-           "WHERE a.status = 'SCHEDULED' " +
-           "AND ((a.appointment_time <= :startTime AND :startTime < DATE_ADD(a.appointment_time, INTERVAL a.duration_minutes MINUTE)) " +
-           "OR (:startTime <= a.appointment_time AND a.appointment_time < :endTime)) " +
-           "AND (:excludeId IS NULL OR a.id <> :excludeId)", nativeQuery = true)
-    boolean hasConflictingAppointment(
-        @Param("startTime") LocalDateTime startTime,
+    /**
+     * Candidates that could overlap [startTime, endTime). Overlap is finalized in
+     * {@link #hasConflictingAppointment} using durationMinutes (portable across MySQL/H2;
+     * avoids MySQL DATE_ADD and boolean ClassCastException from native COUNT).
+     */
+    @Query("SELECT a FROM Appointment a WHERE a.status = :status " +
+           "AND a.appointmentTime < :endTime " +
+           "AND (:excludeId IS NULL OR a.id <> :excludeId)")
+    List<Appointment> findScheduledStartingBefore(
+        @Param("status") Appointment.AppointmentStatus status,
         @Param("endTime") LocalDateTime endTime,
         @Param("excludeId") Long excludeId
     );
+
+    default boolean hasConflictingAppointment(LocalDateTime startTime, LocalDateTime endTime, Long excludeId) {
+        return findScheduledStartingBefore(Appointment.AppointmentStatus.SCHEDULED, endTime, excludeId)
+            .stream()
+            .anyMatch(existing -> {
+                LocalDateTime existingEnd = existing.getAppointmentTime()
+                    .plusMinutes(existing.getDurationMinutes() == null ? 30 : existing.getDurationMinutes());
+                return startTime.isBefore(existingEnd) && existing.getAppointmentTime().isBefore(endTime);
+            });
+    }
     
     Page<Appointment> findByPatientIdOrderByAppointmentTimeDesc(Long patientId, Pageable pageable);
     

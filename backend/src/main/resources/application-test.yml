@@ -11,9 +11,15 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+        type:
+          preferred_enum_jdbc_type: VARCHAR
   
   flyway:
     enabled: false
+
+server:
+  servlet:
+    context-path: /api
 
 jwt:
   secret: TestSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong
@@ -22,3 +28,4 @@ jwt:
 logging:
   level:
     com.clinic.queue: DEBUG
+    org.springframework.security: DEBUG

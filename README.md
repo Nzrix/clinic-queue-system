@@ -442,19 +442,19 @@ cd frontend && npm test
 ### ภาพหน้าจอ
 
 #### แดชบอร์ด
-![Dashboard](docs/dashboard.png)
+![Dashboard](docs/screenshots/dashboard.png)
 
 #### จัดการผู้ป่วย
-![Patients](docs/patients.png)
+![Patients](docs/screenshots/patients.png)
 
 #### นัดหมาย
-![Appointments](docs/appointments.png)
+![Appointments](docs/screenshots/appointments.png)
 
 #### จัดการคิว
-![Queue](docs/queue.png)
+![Queue](docs/screenshots/queue.png)
 
 #### หน้าจอแสดงคิว
-![Queue Display](docs/queue-display.png)
+![Queue Display](docs/screenshots/queue-display.png)
 
 ### จุดเด่นในการพัฒนา
 

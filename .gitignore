@@ -26,3 +26,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Root tooling (Playwright one-off installs)
+/node_modules/
+/package.json
+/package-lock.json
+/tmp/
